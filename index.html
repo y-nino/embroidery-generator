@@ -16,7 +16,7 @@
     }
 
     .controls {
-      width: 360px;
+      width: 380px;
       padding: 20px;
       background: #fafafa;
       overflow-y: auto;
@@ -147,14 +147,15 @@
       cursor: pointer;
     }
 
-    .hidden {
-      display: none;
-    }
-
     .small {
       font-size: 11px;
       color: #777;
       margin-top: 4px;
+    }
+
+    .mode-section.hidden,
+    .color-item.hidden {
+      display: none;
     }
   </style>
 </head>
@@ -171,6 +172,15 @@
     </label>
 
     <label>
+      パターン種類
+      <select id="patternMode">
+        <option value="line" selected>ライン</option>
+        <option value="block">ブロック</option>
+        <option value="mix">ミックス</option>
+      </select>
+    </label>
+
+    <label>
       乱数方式
       <select id="randomType">
         <option value="lcg">LCG</option>
@@ -179,48 +189,91 @@
       </select>
     </label>
 
-    <label>
-      ライン数 <span class="value" id="linesVal">20</span>
-      <input type="range" id="lines" min="1" max="60" value="20">
-    </label>
+    <div class="section mode-section" id="lineSection">
+      <div class="section-title">ライン設定</div>
 
-    <label>
-      ステップ数 <span class="value" id="stepsVal">15</span>
-      <input type="range" id="steps" min="5" max="50" value="15">
-    </label>
+      <label>
+        ライン数 <span class="value" id="linesVal">20</span>
+        <input type="range" id="lines" min="1" max="60" value="20">
+      </label>
 
-    <label>
-      ステップサイズ <span class="value" id="stepSizeVal">40</span>
-      <input type="range" id="stepSize" min="10" max="100" value="40">
-    </label>
+      <label>
+        ステップ数 <span class="value" id="stepsVal">15</span>
+        <input type="range" id="steps" min="5" max="50" value="15">
+      </label>
 
-    <label>
-      方向の連続性 <span class="value" id="contVal">60</span>
-      <input type="range" id="cont" min="0" max="100" value="60">
-    </label>
+      <label>
+        ステップサイズ <span class="value" id="stepSizeVal">40</span>
+        <input type="range" id="stepSize" min="10" max="100" value="40">
+      </label>
 
-    <label>
-      線の太さ <span class="value" id="strokeWidthVal">12</span>
-      <input type="range" id="strokeWidth" min="4" max="30" value="12">
-    </label>
+      <label>
+        方向の連続性 <span class="value" id="contVal">60</span>
+        <input type="range" id="cont" min="0" max="100" value="60">
+      </label>
 
-    <label>
-      角の丸み <span class="value" id="cornerRoundVal">2</span>
-      <input type="range" id="cornerRound" min="0" max="4" step="1" value="2">
-    </label>
+      <label>
+        線の太さ <span class="value" id="strokeWidthVal">12</span>
+        <input type="range" id="strokeWidth" min="4" max="30" value="12">
+      </label>
+
+      <label>
+        角の丸み <span class="value" id="cornerRoundVal">2</span>
+        <input type="range" id="cornerRound" min="0" max="4" step="1" value="2">
+      </label>
+    </div>
+
+    <div class="section mode-section" id="blockSection">
+      <div class="section-title">ブロック設定</div>
+
+      <label>
+        ブロック数 <span class="value" id="blockCountVal">50</span>
+        <input type="range" id="blockCount" min="5" max="150" value="50">
+      </label>
+
+      <label>
+        ブロック幅 <span class="value" id="blockWidthVal">26</span>
+        <input type="range" id="blockWidth" min="6" max="80" value="26">
+      </label>
+
+      <label>
+        ブロック高さ <span class="value" id="blockHeightVal">12</span>
+        <input type="range" id="blockHeight" min="6" max="60" value="12">
+      </label>
+
+      <label>
+        サイズばらつき <span class="value" id="blockJitterVal">35</span>
+        <input type="range" id="blockJitter" min="0" max="100" value="35">
+      </label>
+
+      <label>
+        クラスター数 <span class="value" id="clusterCountVal">4</span>
+        <input type="range" id="clusterCount" min="1" max="8" value="4">
+      </label>
+
+      <label>
+        クラスターの広がり <span class="value" id="clusterSpreadVal">90</span>
+        <input type="range" id="clusterSpread" min="20" max="220" value="90">
+      </label>
+
+      <label>
+        回転のばらつき <span class="value" id="blockRotateVal">10</span>
+        <input type="range" id="blockRotate" min="0" max="90" value="10">
+      </label>
+    </div>
 
     <div class="section">
-      <div class="section-title">刺繍向け制御</div>
+      <div class="section-title">共通制御</div>
 
       <label>
         推奨ステッチ長 <span class="value" id="stitchLenVal">2.5</span> mm
         <input type="range" id="stitchLength" min="0.8" max="4.0" step="0.1" value="2.5">
       </label>
-      <div class="small">これは生成密度の目安です。Ink/Stitch の実際の針設定は Inkscape 側で調整してください。</div>
+      <div class="small">生成密度の目安です。実際の刺繍設定は Ink/Stitch 側で調整してください。</div>
 
       <label>
         最小間距離 <span class="value" id="minGapVal">8</span> px
-        <input type="range" id="minGap" min="0" max="40" value="8">
+        <input type="range" id="minGap" min="0" max="50" value="8">
       </label>
 
       <label>
@@ -274,10 +327,9 @@
     </div>
 
     <div class="hint">
-      スライダーを動かすと、その場でパターンが更新されます。<br>
-      「再生成」を押すと、同じ設定のまま別のパターンを作ります。<br>
-      背景は透明、書き出しは closed outline + fill です。<br>
-      角が尖る場合は「角の丸み」を上げてください。
+      ライン、ブロック、ミックスの3種類を切り替えられます。<br>
+      背景は透明、書き出しはすべて closed fill shape です。<br>
+      ブロックは参考画像のように、クラスター中心を持つランダム配置になっています。
     </div>
   </div>
 
@@ -316,15 +368,30 @@
       return randLCG();
     }
 
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
+
     function updateLabels() {
-      document.getElementById("linesVal").textContent = document.getElementById("lines").value;
-      document.getElementById("stepsVal").textContent = document.getElementById("steps").value;
-      document.getElementById("stepSizeVal").textContent = document.getElementById("stepSize").value;
-      document.getElementById("contVal").textContent = document.getElementById("cont").value;
-      document.getElementById("strokeWidthVal").textContent = document.getElementById("strokeWidth").value;
-      document.getElementById("cornerRoundVal").textContent = document.getElementById("cornerRound").value;
-      document.getElementById("stitchLenVal").textContent = document.getElementById("stitchLength").value;
-      document.getElementById("minGapVal").textContent = document.getElementById("minGap").value;
+      const setText = (id, val) => document.getElementById(id).textContent = val;
+
+      setText("linesVal", document.getElementById("lines").value);
+      setText("stepsVal", document.getElementById("steps").value);
+      setText("stepSizeVal", document.getElementById("stepSize").value);
+      setText("contVal", document.getElementById("cont").value);
+      setText("strokeWidthVal", document.getElementById("strokeWidth").value);
+      setText("cornerRoundVal", document.getElementById("cornerRound").value);
+
+      setText("blockCountVal", document.getElementById("blockCount").value);
+      setText("blockWidthVal", document.getElementById("blockWidth").value);
+      setText("blockHeightVal", document.getElementById("blockHeight").value);
+      setText("blockJitterVal", document.getElementById("blockJitter").value);
+      setText("clusterCountVal", document.getElementById("clusterCount").value);
+      setText("clusterSpreadVal", document.getElementById("clusterSpread").value);
+      setText("blockRotateVal", document.getElementById("blockRotate").value);
+
+      setText("stitchLenVal", document.getElementById("stitchLength").value);
+      setText("minGapVal", document.getElementById("minGap").value);
     }
 
     function updateColorUI() {
@@ -334,14 +401,28 @@
       document.getElementById("colorItem3").classList.toggle("hidden", count < 3);
     }
 
+    function updateModeUI() {
+      const mode = document.getElementById("patternMode").value;
+      const lineSection = document.getElementById("lineSection");
+      const blockSection = document.getElementById("blockSection");
+
+      lineSection.classList.toggle("hidden", mode === "block");
+      blockSection.classList.toggle("hidden", mode === "line");
+    }
+
     function getSelectedColors() {
       const count = parseInt(document.getElementById("colorCount").value, 10);
-      const colors = [
+      return [
         document.getElementById("lineColor1").value,
         document.getElementById("lineColor2").value,
         document.getElementById("lineColor3").value
-      ];
-      return colors.slice(0, count);
+      ].slice(0, count);
+    }
+
+    function chooseColor(index, selectedColors) {
+      const autoColor = document.getElementById("autoColor").value;
+      if (autoColor === "off") return selectedColors[0];
+      return selectedColors[index % selectedColors.length];
     }
 
     function distance(a, b) {
@@ -365,6 +446,20 @@
       return Math.sqrt((px - cx) ** 2 + (py - cy) ** 2);
     }
 
+    function polygonTooClose(polygon, existingShapes, minGap) {
+      if (minGap <= 0) return false;
+
+      for (const p of polygon) {
+        for (const shape of existingShapes) {
+          const pts = shape.basePoints || shape.outline || [];
+          for (const q of pts) {
+            if (distance(p, q) < minGap) return true;
+          }
+        }
+      }
+      return false;
+    }
+
     function pathTooClose(points, existingPaths, minGap) {
       if (minGap <= 0) return false;
 
@@ -378,12 +473,6 @@
         }
       }
       return false;
-    }
-
-    function chooseColor(index, selectedColors) {
-      const autoColor = document.getElementById("autoColor").value;
-      if (autoColor === "off") return selectedColors[0];
-      return selectedColors[index % selectedColors.length];
     }
 
     function buildPathData(points) {
@@ -547,41 +636,134 @@
       return result;
     }
 
-    function generate() {
-      updateLabels();
-      updateColorUI();
+    function rotatePoint(px, py, cx, cy, angleRad) {
+      const dx = px - cx;
+      const dy = py - cy;
+      return [
+        cx + dx * Math.cos(angleRad) - dy * Math.sin(angleRad),
+        cy + dx * Math.sin(angleRad) + dy * Math.cos(angleRad)
+      ];
+    }
 
-      const canvas = document.getElementById("canvas");
-      const ctx = canvas.getContext("2d");
+    function makeBlockPolygon(cx, cy, w, h, angleDeg) {
+      const hw = w / 2;
+      const hh = h / 2;
+      const angle = angleDeg * Math.PI / 180;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const pts = [
+        [cx - hw, cy - hh],
+        [cx + hw, cy - hh],
+        [cx + hw, cy + hh],
+        [cx - hw, cy + hh]
+      ];
 
-      const lineCount = parseInt(document.getElementById("lines").value, 10);
+      return pts.map(p => rotatePoint(p[0], p[1], cx, cy, angle));
+    }
+
+    function pointInBounds(poly) {
+      return poly.every(p =>
+        p[0] >= MARGIN &&
+        p[0] <= INTERNAL_SIZE - MARGIN &&
+        p[1] >= MARGIN &&
+        p[1] <= INTERNAL_SIZE - MARGIN
+      );
+    }
+
+    function generateBlockShapes(count, colors, minGap) {
+      const blockWidth = parseInt(document.getElementById("blockWidth").value, 10);
+      const blockHeight = parseInt(document.getElementById("blockHeight").value, 10);
+      const blockJitter = parseInt(document.getElementById("blockJitter").value, 10) / 100;
+      const clusterCount = parseInt(document.getElementById("clusterCount").value, 10);
+      const clusterSpread = parseInt(document.getElementById("clusterSpread").value, 10);
+      const blockRotate = parseInt(document.getElementById("blockRotate").value, 10);
+
+      const clusters = [];
+      for (let i = 0; i < clusterCount; i++) {
+        clusters.push([
+          MARGIN + getRand() * (INTERNAL_SIZE - MARGIN * 2),
+          MARGIN + getRand() * (INTERNAL_SIZE - MARGIN * 2)
+        ]);
+      }
+
+      const shapes = [];
+      let attempts = 0;
+      const maxAttempts = count * 30;
+
+      while (shapes.length < count && attempts < maxAttempts) {
+        attempts++;
+
+        const cluster = clusters[Math.floor(getRand() * clusters.length)];
+        const useScatter = getRand() < 0.18;
+
+        let cx, cy;
+        if (useScatter) {
+          cx = MARGIN + getRand() * (INTERNAL_SIZE - MARGIN * 2);
+          cy = MARGIN + getRand() * (INTERNAL_SIZE - MARGIN * 2);
+        } else {
+          cx = cluster[0] + (getRand() - 0.5) * 2 * clusterSpread;
+          cy = cluster[1] + (getRand() - 0.5) * 2 * clusterSpread;
+        }
+
+        cx = clamp(cx, MARGIN, INTERNAL_SIZE - MARGIN);
+        cy = clamp(cy, MARGIN, INTERNAL_SIZE - MARGIN);
+
+        const w = blockWidth * (1 + (getRand() - 0.5) * 2 * blockJitter);
+        const h = blockHeight * (1 + (getRand() - 0.5) * 2 * blockJitter);
+
+        const orientationBias = getRand();
+        let ww = w;
+        let hh = h;
+
+        if (orientationBias < 0.45) {
+          ww = Math.max(w, h * 1.8);
+          hh = Math.min(h, w * 0.7);
+        } else if (orientationBias < 0.9) {
+          ww = Math.min(w, h * 0.7);
+          hh = Math.max(h, w * 1.8);
+        }
+
+        const angle = (getRand() - 0.5) * 2 * blockRotate;
+        const poly = makeBlockPolygon(cx, cy, ww, hh, angle);
+
+        if (!pointInBounds(poly)) continue;
+        if (polygonTooClose(poly, shapes, minGap)) continue;
+
+        const color = chooseColor(shapes.length, colors);
+
+        shapes.push({
+          kind: "block",
+          points: poly,
+          basePoints: poly,
+          color: color,
+          fillPath: buildClosedPathData(poly)
+        });
+      }
+
+      return shapes;
+    }
+
+    function generateLineShapes(count, colors, minGap) {
       const steps = parseInt(document.getElementById("steps").value, 10);
       const stepSize = parseInt(document.getElementById("stepSize").value, 10);
       const cont = parseInt(document.getElementById("cont").value, 10) / 100;
       const strokeWidth = parseInt(document.getElementById("strokeWidth").value, 10);
       const cornerRound = parseInt(document.getElementById("cornerRound").value, 10);
-      const selectedColors = getSelectedColors();
-      const minGap = parseInt(document.getElementById("minGap").value, 10);
       const stitchLength = parseFloat(document.getElementById("stitchLength").value);
 
       const densityFactor = Math.max(0.45, Math.min(1.5, stitchLength / 2.5));
 
       let allPaths = [];
       let attempts = 0;
-      const maxAttempts = lineCount * 20;
+      const maxAttempts = count * 20;
 
-      while (allPaths.length < lineCount && attempts < maxAttempts) {
+      while (allPaths.length < count && attempts < maxAttempts) {
         attempts++;
 
         const pts = generateSingleLine(steps, stepSize, cont, densityFactor);
 
-        if (pathTooClose(pts, allPaths, minGap)) {
-          continue;
-        }
+        if (pathTooClose(pts, allPaths, minGap)) continue;
 
-        const color = chooseColor(allPaths.length, selectedColors);
+        const color = chooseColor(allPaths.length, colors);
         let outline = computeOutline(pts, strokeWidth);
 
         if (!outline || outline.length < 3) continue;
@@ -589,12 +771,12 @@
         outline = smoothClosedPolygon(outline, cornerRound);
 
         allPaths.push({
+          kind: "line",
           points: pts,
           outline: outline,
+          basePoints: outline,
           color: color,
-          path: buildPathData(pts),
-          fillPath: buildClosedPathData(outline),
-          strokeWidth: strokeWidth
+          fillPath: buildClosedPathData(outline)
         });
       }
 
@@ -607,24 +789,61 @@
       let finalPaths = [];
       Object.keys(grouped).forEach(color => {
         const ordered = optimizeOrder(grouped[color]);
+        ordered.forEach(item => {
+          item.fillPath = buildClosedPathData(item.outline);
+        });
         finalPaths = finalPaths.concat(ordered);
       });
 
-      currentSVG = finalPaths;
+      return finalPaths;
+    }
 
-      currentSVG.forEach(item => {
-        const pts = item.outline;
-        if (!pts || pts.length < 3) return;
+    function drawShape(ctx, shape) {
+      const pts = shape.kind === "line" ? shape.outline : shape.points;
+      if (!pts || pts.length < 3) return;
 
-        ctx.beginPath();
-        ctx.moveTo(pts[0][0], pts[0][1]);
-        for (let i = 1; i < pts.length; i++) {
-          ctx.lineTo(pts[i][0], pts[i][1]);
-        }
-        ctx.closePath();
-        ctx.fillStyle = item.color;
-        ctx.fill();
-      });
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(pts[i][0], pts[i][1]);
+      }
+      ctx.closePath();
+      ctx.fillStyle = shape.color;
+      ctx.fill();
+    }
+
+    function generate() {
+      updateLabels();
+      updateColorUI();
+      updateModeUI();
+
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const mode = document.getElementById("patternMode").value;
+      const minGap = parseInt(document.getElementById("minGap").value, 10);
+      const colors = getSelectedColors();
+
+      currentSVG = [];
+
+      if (mode === "line") {
+        const lineCount = parseInt(document.getElementById("lines").value, 10);
+        currentSVG = generateLineShapes(lineCount, colors, minGap);
+      } else if (mode === "block") {
+        const blockCount = parseInt(document.getElementById("blockCount").value, 10);
+        currentSVG = generateBlockShapes(blockCount, colors, minGap);
+      } else {
+        const lineCount = parseInt(document.getElementById("lines").value, 10);
+        const blockCount = parseInt(document.getElementById("blockCount").value, 10);
+
+        const lines = generateLineShapes(lineCount, colors, minGap);
+        const blocks = generateBlockShapes(blockCount, colors, minGap);
+
+        currentSVG = [...lines, ...blocks];
+      }
+
+      currentSVG.forEach(shape => drawShape(ctx, shape));
     }
 
     function nextPattern() {
@@ -636,10 +855,11 @@
     function downloadSVG() {
       const sizeMm = parseInt(document.getElementById("canvasSize").value, 10);
       const stitchLength = parseFloat(document.getElementById("stitchLength").value);
+      const mode = document.getElementById("patternMode").value;
 
       let svg = `<?xml version="1.0" encoding="UTF-8"?>`;
       svg += `<svg xmlns="http://www.w3.org/2000/svg" width="${sizeMm}mm" height="${sizeMm}mm" viewBox="0 0 ${INTERNAL_SIZE} ${INTERNAL_SIZE}">`;
-      svg += `<desc>Recommended running stitch length: ${stitchLength}mm. Set actual stitch parameters in Ink/Stitch.</desc>`;
+      svg += `<desc>Pattern mode: ${mode}. Recommended stitch length: ${stitchLength}mm.</desc>`;
 
       currentSVG.forEach(item => {
         svg += `<path d="${item.fillPath}" fill="${item.color}" stroke="none"/>`;
@@ -652,7 +872,7 @@
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = `pattern_${sizeMm}mm.svg`;
+      a.download = `pattern_${mode}_${sizeMm}mm.svg`;
       a.click();
 
       URL.revokeObjectURL(url);
@@ -671,6 +891,7 @@
     });
 
     updateColorUI();
+    updateModeUI();
     generate();
   </script>
 </body>
