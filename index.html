@@ -6,6 +6,7 @@
   <title>刺繍パターン生成ツール</title>
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: sans-serif;
@@ -13,12 +14,14 @@
       min-height: 100vh;
       background: #ddd;
     }
+
     .controls {
-      width: 320px;
+      width: 340px;
       padding: 20px;
       background: #eeeeee;
       overflow-y: auto;
     }
+
     .preview {
       flex: 1;
       display: flex;
@@ -27,6 +30,7 @@
       padding: 20px;
       background: #666;
     }
+
     canvas {
       background: #f5f2eb;
       max-width: 90vmin;
@@ -35,21 +39,35 @@
       height: 800px;
       box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
     }
+
     label {
       display: block;
       margin-top: 14px;
       font-size: 14px;
     }
+
     input[type="range"] {
       width: 100%;
       margin-top: 6px;
     }
+
+    input[type="color"] {
+      width: 100%;
+      height: 40px;
+      margin-top: 6px;
+      border: none;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+    }
+
     .buttons {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
       margin-top: 18px;
     }
+
     button {
       padding: 10px 14px;
       border: none;
@@ -57,23 +75,33 @@
       color: white;
       cursor: pointer;
       border-radius: 6px;
+      font-size: 14px;
     }
+
     button:hover {
       background: #111;
     }
+
     .value {
       color: #666;
       font-size: 12px;
       margin-left: 6px;
     }
+
+    .hint {
+      margin-top: 18px;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
   <div class="controls">
-    <h2>パラメータ設定</h2>
+    <h2>パターン設定</h2>
 
     <label>
-      線の本数 <span class="value" id="linesVal">20</span>
+      ライン数 <span class="value" id="linesVal">20</span>
       <input type="range" id="lines" min="1" max="40" value="20">
     </label>
 
@@ -88,14 +116,28 @@
     </label>
 
     <label>
-      連続性 <span class="value" id="contVal">60</span>
+      方向の連続性 <span class="value" id="contVal">60</span>
       <input type="range" id="cont" min="0" max="100" value="60">
     </label>
 
+    <label>
+      線の太さ <span class="value" id="strokeWidthVal">4</span>
+      <input type="range" id="strokeWidth" min="1" max="12" value="4">
+    </label>
+
+    <label>
+      線の色
+      <input type="color" id="lineColor" value="#c86ba4">
+    </label>
+
     <div class="buttons">
-      <button onclick="nextPattern()">次のパターン</button>
-      <button onclick="toggleRun()">開始 / 停止</button>
+      <button onclick="nextPattern()">再生成</button>
       <button onclick="downloadSVG()">SVGを書き出す</button>
+    </div>
+
+    <div class="hint">
+      スライダーを動かすと、その場でパターンが更新されます。<br>
+      「再生成」を押すと、同じ設定のまま別のパターンを作ります。
     </div>
   </div>
 
@@ -105,10 +147,7 @@
 
   <script>
     let seed = 1;
-    let running = true;
     let currentSVG = [];
-
-    const colors = ["#c86ba4", "#aa92e6", "#42533e"];
 
     function rand() {
       seed = (seed * 9301 + 49297) % 233280;
@@ -120,6 +159,7 @@
       document.getElementById("stepsVal").textContent = document.getElementById("steps").value;
       document.getElementById("stepSizeVal").textContent = document.getElementById("stepSize").value;
       document.getElementById("contVal").textContent = document.getElementById("cont").value;
+      document.getElementById("strokeWidthVal").textContent = document.getElementById("strokeWidth").value;
     }
 
     function generate() {
@@ -134,6 +174,8 @@
       const steps = parseInt(document.getElementById("steps").value, 10);
       const stepSize = parseInt(document.getElementById("stepSize").value, 10);
       const cont = parseInt(document.getElementById("cont").value, 10) / 100;
+      const strokeWidth = parseInt(document.getElementById("strokeWidth").value, 10);
+      const lineColor = document.getElementById("lineColor").value;
 
       currentSVG = [];
 
@@ -149,6 +191,7 @@
 
         for (let j = 0; j < steps; j++) {
           let dir;
+
           if (rand() < cont) {
             dir = prevDir;
           } else {
@@ -170,14 +213,13 @@
           prevDir = dir;
         }
 
-        const color = colors[Math.floor(rand() * colors.length)];
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 4;
+        ctx.strokeStyle = lineColor;
+        ctx.lineWidth = strokeWidth;
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
         ctx.stroke();
 
-        currentSVG.push({ path, color });
+        currentSVG.push({ path, color: lineColor, strokeWidth });
       }
     }
 
@@ -186,16 +228,14 @@
       generate();
     }
 
-    function toggleRun() {
-      running = !running;
-    }
-
     function downloadSVG() {
+      const strokeWidth = parseInt(document.getElementById("strokeWidth").value, 10);
+
       let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">`;
       svg += `<rect width="800" height="800" fill="#f5f2eb"/>`;
 
       currentSVG.forEach(item => {
-        svg += `<path d="${item.path}" fill="none" stroke="${item.color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+        svg += `<path d="${item.path}" fill="none" stroke="${item.color}" stroke-width="${item.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`;
       });
 
       svg += `</svg>`;
@@ -215,9 +255,7 @@
       el.addEventListener("input", generate);
     });
 
-    setInterval(() => {
-      if (running) nextPattern();
-    }, 300);
+    document.getElementById("lineColor").addEventListener("input", generate);
 
     generate();
   </script>
