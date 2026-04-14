@@ -7,20 +7,30 @@
   <style>
     * { box-sizing: border-box; }
 
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      min-height: 100%;
       font-family: sans-serif;
+      background: #ffffff;
+      color: #222;
+    }
+
+    .app {
       display: flex;
       min-height: 100vh;
-      background: #ffffff;
+      width: 100%;
     }
 
     .controls {
       width: 380px;
+      min-width: 300px;
+      max-width: 420px;
       padding: 20px;
       background: #fafafa;
-      overflow-y: auto;
       border-right: 1px solid #ddd;
+      overflow-y: auto;
+      flex-shrink: 0;
     }
 
     .preview {
@@ -28,21 +38,30 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 24px;
       background: #ffffff;
+      min-width: 0;
+      min-height: 100vh;
+    }
+
+    .canvas-wrap {
+      width: min(100%, 900px);
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
       background: transparent;
-      max-width: 90vmin;
-      max-height: 90vmin;
-      width: 800px;
-      height: 800px;
       box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
     }
 
     h2 {
-      margin-top: 0;
+      margin: 0 0 10px 0;
       font-size: 22px;
     }
 
@@ -157,184 +176,233 @@
     .color-item.hidden {
       display: none;
     }
+
+    @media (max-width: 980px) {
+      .app {
+        flex-direction: column;
+      }
+
+      .controls {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+        overflow-y: visible;
+      }
+
+      .preview {
+        min-height: auto;
+        padding: 16px;
+      }
+
+      .canvas-wrap {
+        width: min(100%, 92vw);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .controls {
+        padding: 16px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .buttons {
+        flex-direction: column;
+      }
+
+      .color-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="controls">
-    <h2>パターン設定</h2>
-
-    <label>
-      キャンバスサイズ
-      <select id="canvasSize">
-        <option value="70">70mm × 70mm</option>
-        <option value="100" selected>100mm × 100mm</option>
-      </select>
-    </label>
-
-    <label>
-      パターン種類
-      <select id="patternMode">
-        <option value="line" selected>ライン</option>
-        <option value="block">ブロック</option>
-        <option value="mix">ミックス</option>
-      </select>
-    </label>
-
-    <label>
-      乱数方式
-      <select id="randomType">
-        <option value="lcg">LCG</option>
-        <option value="math">Math.random</option>
-        <option value="xorshift">Xorshift</option>
-      </select>
-    </label>
-
-    <div class="section mode-section" id="lineSection">
-      <div class="section-title">ライン設定</div>
+  <div class="app">
+    <div class="controls">
+      <h2>パターン設定</h2>
 
       <label>
-        ライン数 <span class="value" id="linesVal">20</span>
-        <input type="range" id="lines" min="1" max="60" value="20">
-      </label>
-
-      <label>
-        ステップ数 <span class="value" id="stepsVal">15</span>
-        <input type="range" id="steps" min="5" max="50" value="15">
-      </label>
-
-      <label>
-        ステップサイズ <span class="value" id="stepSizeVal">40</span>
-        <input type="range" id="stepSize" min="10" max="100" value="40">
-      </label>
-
-      <label>
-        方向の連続性 <span class="value" id="contVal">60</span>
-        <input type="range" id="cont" min="0" max="100" value="60">
-      </label>
-
-      <label>
-        線の太さ <span class="value" id="strokeWidthVal">12</span>
-        <input type="range" id="strokeWidth" min="4" max="30" value="12">
-      </label>
-
-      <label>
-        角の丸み <span class="value" id="cornerRoundVal">2</span>
-        <input type="range" id="cornerRound" min="0" max="4" step="1" value="2">
-      </label>
-    </div>
-
-    <div class="section mode-section" id="blockSection">
-      <div class="section-title">ブロック設定</div>
-
-      <label>
-        ブロック数 <span class="value" id="blockCountVal">50</span>
-        <input type="range" id="blockCount" min="5" max="150" value="50">
-      </label>
-
-      <label>
-        ブロック幅 <span class="value" id="blockWidthVal">26</span>
-        <input type="range" id="blockWidth" min="6" max="80" value="26">
-      </label>
-
-      <label>
-        ブロック高さ <span class="value" id="blockHeightVal">12</span>
-        <input type="range" id="blockHeight" min="6" max="60" value="12">
-      </label>
-
-      <label>
-        サイズばらつき <span class="value" id="blockJitterVal">35</span>
-        <input type="range" id="blockJitter" min="0" max="100" value="35">
-      </label>
-
-      <label>
-        クラスター数 <span class="value" id="clusterCountVal">4</span>
-        <input type="range" id="clusterCount" min="1" max="8" value="4">
-      </label>
-
-      <label>
-        クラスターの広がり <span class="value" id="clusterSpreadVal">90</span>
-        <input type="range" id="clusterSpread" min="20" max="220" value="90">
-      </label>
-
-      <label>
-        回転のばらつき <span class="value" id="blockRotateVal">10</span>
-        <input type="range" id="blockRotate" min="0" max="90" value="10">
-      </label>
-    </div>
-
-    <div class="section">
-      <div class="section-title">共通制御</div>
-
-      <label>
-        推奨ステッチ長 <span class="value" id="stitchLenVal">2.5</span> mm
-        <input type="range" id="stitchLength" min="0.8" max="4.0" step="0.1" value="2.5">
-      </label>
-      <div class="small">生成密度の目安です。実際の刺繍設定は Ink/Stitch 側で調整してください。</div>
-
-      <label>
-        最小間距離 <span class="value" id="minGapVal">8</span> px
-        <input type="range" id="minGap" min="0" max="50" value="8">
-      </label>
-
-      <label>
-        パス順序最適化
-        <select id="pathSort">
-          <option value="on" selected>有効</option>
-          <option value="off">無効</option>
+        キャンバスサイズ
+        <select id="canvasSize">
+          <option value="70">70mm × 70mm</option>
+          <option value="100" selected>100mm × 100mm</option>
         </select>
       </label>
 
       <label>
-        自動分色
-        <select id="autoColor">
-          <option value="on" selected>有効</option>
-          <option value="off">無効</option>
+        パターン種類
+        <select id="patternMode">
+          <option value="line" selected>ライン</option>
+          <option value="block">ブロック</option>
         </select>
       </label>
-    </div>
-
-    <div class="section">
-      <div class="section-title">色設定</div>
 
       <label>
-        色数
-        <select id="colorCount">
-          <option value="1">1色</option>
-          <option value="2">2色</option>
-          <option value="3" selected>3色</option>
+        乱数方式
+        <select id="randomType">
+          <option value="lcg">LCG</option>
+          <option value="math">Math.random</option>
+          <option value="xorshift">Xorshift</option>
         </select>
       </label>
 
-      <div class="color-grid">
-        <div class="color-item" id="colorItem1">
-          <span>色1</span>
-          <input type="color" id="lineColor1" value="#c86ba4">
+      <div class="section mode-section" id="lineSection">
+        <div class="section-title">ライン設定</div>
+
+        <label>
+          ライン数 <span class="value" id="linesVal">20</span>
+          <input type="range" id="lines" min="1" max="60" value="20">
+        </label>
+
+        <label>
+          ステップ数 <span class="value" id="stepsVal">15</span>
+          <input type="range" id="steps" min="5" max="50" value="15">
+        </label>
+
+        <label>
+          ステップサイズ <span class="value" id="stepSizeVal">40</span>
+          <input type="range" id="stepSize" min="10" max="100" value="40">
+        </label>
+
+        <label>
+          方向の連続性 <span class="value" id="contVal">60</span>
+          <input type="range" id="cont" min="0" max="100" value="60">
+        </label>
+
+        <label>
+          線の太さ <span class="value" id="strokeWidthVal">12</span>
+          <input type="range" id="strokeWidth" min="4" max="30" value="12">
+        </label>
+
+        <label>
+          角の丸み <span class="value" id="cornerRoundVal">2</span>
+          <input type="range" id="cornerRound" min="0" max="4" step="1" value="2">
+        </label>
+      </div>
+
+      <div class="section mode-section" id="blockSection">
+        <div class="section-title">ブロック設定</div>
+
+        <label>
+          ブロック数 <span class="value" id="blockCountVal">50</span>
+          <input type="range" id="blockCount" min="5" max="150" value="50">
+        </label>
+
+        <label>
+          ブロック幅 <span class="value" id="blockWidthVal">26</span>
+          <input type="range" id="blockWidth" min="6" max="80" value="26">
+        </label>
+
+        <label>
+          ブロック高さ <span class="value" id="blockHeightVal">12</span>
+          <input type="range" id="blockHeight" min="6" max="60" value="12">
+        </label>
+
+        <label>
+          サイズばらつき <span class="value" id="blockJitterVal">35</span>
+          <input type="range" id="blockJitter" min="0" max="100" value="35">
+        </label>
+
+        <label>
+          クラスター数 <span class="value" id="clusterCountVal">4</span>
+          <input type="range" id="clusterCount" min="1" max="8" value="4">
+        </label>
+
+        <label>
+          クラスターの広がり <span class="value" id="clusterSpreadVal">90</span>
+          <input type="range" id="clusterSpread" min="20" max="220" value="90">
+        </label>
+
+        <label>
+          回転のばらつき <span class="value" id="blockRotateVal">10</span>
+          <input type="range" id="blockRotate" min="0" max="90" value="10">
+        </label>
+      </div>
+
+      <div class="section">
+        <div class="section-title">共通制御</div>
+
+        <label>
+          推奨ステッチ長 <span class="value" id="stitchLenVal">2.5</span> mm
+          <input type="range" id="stitchLength" min="0.8" max="4.0" step="0.1" value="2.5">
+        </label>
+        <div class="small">生成密度の目安です。実際の刺繍設定は Ink/Stitch 側で調整してください。</div>
+
+        <label>
+          最小間距離 <span class="value" id="minGapVal">8</span> px
+          <input type="range" id="minGap" min="0" max="50" value="8">
+        </label>
+
+        <label>
+          パス順序最適化
+          <select id="pathSort">
+            <option value="on" selected>有効</option>
+            <option value="off">無効</option>
+          </select>
+        </label>
+
+        <label>
+          自動分色
+          <select id="autoColor">
+            <option value="on" selected>有効</option>
+            <option value="off">無効</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="section">
+        <div class="section-title">色設定</div>
+
+        <label>
+          色数
+          <select id="colorCount">
+            <option value="1">1色</option>
+            <option value="2">2色</option>
+            <option value="3" selected>3色</option>
+          </select>
+        </label>
+
+        <div class="color-grid">
+          <div class="color-item" id="colorItem1">
+            <span>色1</span>
+            <input type="color" id="lineColor1" value="#c86ba4">
+          </div>
+          <div class="color-item" id="colorItem2">
+            <span>色2</span>
+            <input type="color" id="lineColor2" value="#aa92e6">
+          </div>
+          <div class="color-item" id="colorItem3">
+            <span>色3</span>
+            <input type="color" id="lineColor3" value="#42533e">
+          </div>
         </div>
-        <div class="color-item" id="colorItem2">
-          <span>色2</span>
-          <input type="color" id="lineColor2" value="#aa92e6">
-        </div>
-        <div class="color-item" id="colorItem3">
-          <span>色3</span>
-          <input type="color" id="lineColor3" value="#42533e">
-        </div>
+      </div>
+
+      <div class="buttons">
+        <button onclick="nextPattern()">再生成</button>
+        <button onclick="downloadSVG()">SVGを書き出す</button>
+      </div>
+
+      <div class="hint">
+        レイアウトは画面幅に応じて自動で切り替わります。<br>
+        大きい画面では左右配置、小さい画面では上下配置になります。<br>
+        背景は透明、書き出しは closed fill shape です。
       </div>
     </div>
 
-    <div class="buttons">
-      <button onclick="nextPattern()">再生成</button>
-      <button onclick="downloadSVG()">SVGを書き出す</button>
+    <div class="preview">
+      <div class="canvas-wrap">
+        <canvas id="canvas" width="800" height="800"></canvas>
+      </div>
     </div>
-
-    <div class="hint">
-      ライン、ブロック、ミックスの3種類を切り替えられます。<br>
-      背景は透明、書き出しはすべて closed fill shape です。<br>
-      ブロックは参考画像のように、クラスター中心を持つランダム配置になっています。
-    </div>
-  </div>
-
-  <div class="preview">
-    <canvas id="canvas" width="800" height="800"></canvas>
   </div>
 
   <script>
@@ -830,17 +898,9 @@
       if (mode === "line") {
         const lineCount = parseInt(document.getElementById("lines").value, 10);
         currentSVG = generateLineShapes(lineCount, colors, minGap);
-      } else if (mode === "block") {
+      } else {
         const blockCount = parseInt(document.getElementById("blockCount").value, 10);
         currentSVG = generateBlockShapes(blockCount, colors, minGap);
-      } else {
-        const lineCount = parseInt(document.getElementById("lines").value, 10);
-        const blockCount = parseInt(document.getElementById("blockCount").value, 10);
-
-        const lines = generateLineShapes(lineCount, colors, minGap);
-        const blocks = generateBlockShapes(blockCount, colors, minGap);
-
-        currentSVG = [...lines, ...blocks];
       }
 
       currentSVG.forEach(shape => drawShape(ctx, shape));
