@@ -51,14 +51,14 @@
       margin-top: 6px;
     }
 
-    input[type="color"] {
+    select {
       width: 100%;
-      height: 40px;
       margin-top: 6px;
-      border: none;
-      background: transparent;
-      padding: 0;
-      cursor: pointer;
+      padding: 8px 10px;
+      border: 1px solid #bbb;
+      border-radius: 6px;
+      background: white;
+      font-size: 14px;
     }
 
     .buttons {
@@ -94,11 +94,53 @@
       color: #666;
       line-height: 1.6;
     }
+
+    .color-grid {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      align-items: end;
+    }
+
+    .color-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .color-item span {
+      font-size: 12px;
+      color: #555;
+    }
+
+    .color-item input[type="color"] {
+      width: 100%;
+      height: 30px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="controls">
     <h2>パターン設定</h2>
+
+    <label>
+      乱数方式
+      <select id="randomType">
+        <option value="lcg">LCG</option>
+        <option value="math">Math.random</option>
+        <option value="xorshift">Xorshift</option>
+      </select>
+    </label>
 
     <label>
       ライン数 <span class="value" id="linesVal">20</span>
@@ -126,8 +168,30 @@
     </label>
 
     <label>
+      色数
+      <select id="colorCount">
+        <option value="1">1色</option>
+        <option value="2">2色</option>
+        <option value="3" selected>3色</option>
+      </select>
+    </label>
+
+    <label>
       線の色
-      <input type="color" id="lineColor" value="#c86ba4">
+      <div class="color-grid">
+        <div class="color-item" id="colorItem1">
+          <span>色1</span>
+          <input type="color" id="lineColor1" value="#c86ba4">
+        </div>
+        <div class="color-item" id="colorItem2">
+          <span>色2</span>
+          <input type="color" id="lineColor2" value="#aa92e6">
+        </div>
+        <div class="color-item" id="colorItem3">
+          <span>色3</span>
+          <input type="color" id="lineColor3" value="#42533e">
+        </div>
+      </div>
     </label>
 
     <div class="buttons">
@@ -148,10 +212,29 @@
   <script>
     let seed = 1;
     let currentSVG = [];
+    let xorshiftState = 2463534242;
 
-    function rand() {
+    function randLCG() {
       seed = (seed * 9301 + 49297) % 233280;
       return seed / 233280;
+    }
+
+    function randMath() {
+      return Math.random();
+    }
+
+    function randXorshift() {
+      xorshiftState ^= xorshiftState << 13;
+      xorshiftState ^= xorshiftState >>> 17;
+      xorshiftState ^= xorshiftState << 5;
+      return ((xorshiftState >>> 0) / 4294967296);
+    }
+
+    function getRand() {
+      const type = document.getElementById("randomType").value;
+      if (type === "math") return randMath();
+      if (type === "xorshift") return randXorshift();
+      return randLCG();
     }
 
     function updateLabels() {
@@ -162,8 +245,26 @@
       document.getElementById("strokeWidthVal").textContent = document.getElementById("strokeWidth").value;
     }
 
+    function updateColorUI() {
+      const count = parseInt(document.getElementById("colorCount").value, 10);
+      document.getElementById("colorItem1").classList.remove("hidden");
+      document.getElementById("colorItem2").classList.toggle("hidden", count < 2);
+      document.getElementById("colorItem3").classList.toggle("hidden", count < 3);
+    }
+
+    function getSelectedColors() {
+      const count = parseInt(document.getElementById("colorCount").value, 10);
+      const colors = [
+        document.getElementById("lineColor1").value,
+        document.getElementById("lineColor2").value,
+        document.getElementById("lineColor3").value
+      ];
+      return colors.slice(0, count);
+    }
+
     function generate() {
       updateLabels();
+      updateColorUI();
 
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
@@ -175,13 +276,13 @@
       const stepSize = parseInt(document.getElementById("stepSize").value, 10);
       const cont = parseInt(document.getElementById("cont").value, 10) / 100;
       const strokeWidth = parseInt(document.getElementById("strokeWidth").value, 10);
-      const lineColor = document.getElementById("lineColor").value;
+      const selectedColors = getSelectedColors();
 
       currentSVG = [];
 
       for (let i = 0; i < lineCount; i++) {
-        let x = rand() * 700 + 50;
-        let y = rand() * 700 + 50;
+        let x = getRand() * 700 + 50;
+        let y = getRand() * 700 + 50;
 
         ctx.beginPath();
         ctx.moveTo(x, y);
@@ -192,18 +293,18 @@
         for (let j = 0; j < steps; j++) {
           let dir;
 
-          if (rand() < cont) {
+          if (getRand() < cont) {
             dir = prevDir;
           } else {
             const dirs = [
               [1, 0], [-1, 0], [0, 1], [0, -1],
               [1, 1], [-1, 1], [1, -1], [-1, -1]
             ];
-            dir = dirs[Math.floor(rand() * dirs.length)];
+            dir = dirs[Math.floor(getRand() * dirs.length)];
           }
 
-          x += dir[0] * stepSize * (0.5 + rand());
-          y += dir[1] * stepSize * (0.5 + rand());
+          x += dir[0] * stepSize * (0.5 + getRand());
+          y += dir[1] * stepSize * (0.5 + getRand());
 
           x = Math.max(50, Math.min(750, x));
           y = Math.max(50, Math.min(750, y));
@@ -212,6 +313,8 @@
           path += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
           prevDir = dir;
         }
+
+        const lineColor = selectedColors[Math.floor(getRand() * selectedColors.length)];
 
         ctx.strokeStyle = lineColor;
         ctx.lineWidth = strokeWidth;
@@ -225,12 +328,11 @@
 
     function nextPattern() {
       seed++;
+      xorshiftState = (2463534242 + seed) >>> 0;
       generate();
     }
 
     function downloadSVG() {
-      const strokeWidth = parseInt(document.getElementById("strokeWidth").value, 10);
-
       let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">`;
       svg += `<rect width="800" height="800" fill="#f5f2eb"/>`;
 
@@ -255,8 +357,15 @@
       el.addEventListener("input", generate);
     });
 
-    document.getElementById("lineColor").addEventListener("input", generate);
+    document.querySelectorAll('input[type="color"]').forEach(el => {
+      el.addEventListener("input", generate);
+    });
 
+    document.querySelectorAll('select').forEach(el => {
+      el.addEventListener("change", generate);
+    });
+
+    updateColorUI();
     generate();
   </script>
 </body>
