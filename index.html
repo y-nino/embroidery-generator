@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2487.5">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="zh"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1">&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1">&lt;title&gt;Embroidery Generator&lt;/title&gt;</p>
+<p class="p1">&lt;style&gt;</p>
+<p class="p1">body {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-family: sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 0;</p>
+<p class="p1">}</p>
+<p class="p1">.controls {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>width: 300px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: #eee;</p>
+<p class="p1">}</p>
+<p class="p1">canvas {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: #f5f2eb;</p>
+<p class="p1">}</p>
+<p class="p1">label {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: block;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-top: 10px;</p>
+<p class="p1">}</p>
+<p class="p1">&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;div class="controls"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;h3&gt;参数控制&lt;/h3&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;label&gt;线条数量 &lt;input type="range" id="lines" min="1" max="40" value="20"&gt;&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;label&gt;步数 &lt;input type="range" id="steps" min="5" max="40" value="15"&gt;&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;label&gt;步长 &lt;input type="range" id="stepSize" min="10" max="80" value="40"&gt;&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;label&gt;连续性 &lt;input type="range" id="cont" min="0" max="100" value="60"&gt;&lt;/label&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button onclick="next()"&gt;下一张&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button onclick="toggle()"&gt;开始/停止&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button onclick="downloadSVG()"&gt;导出SVG&lt;/button&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;canvas id="canvas" width="800" height="800"&gt;&lt;/canvas&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1">let seed = 1;</p>
+<p class="p1">let running = true;</p>
+<p class="p2"><br></p>
+<p class="p1">function rand() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>seed = (seed * 9301 + 49297) % 233280;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>return seed / 233280;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function generate() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const canvas = document.getElementById("canvas");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const ctx = canvas.getContext("2d");</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>ctx.clearRect(0,0,800,800);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const lineCount = document.getElementById("lines").value;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const steps = document.getElementById("steps").value;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const stepSize = document.getElementById("stepSize").value;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const cont = document.getElementById("cont").value / 100;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>let svgPaths = [];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>for(let i=0;i&lt;lineCount;i++) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let x = rand()*700+50;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let y = rand()*700+50;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>ctx.beginPath();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>ctx.moveTo(x,y);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>let path = `M ${x} ${y}`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>let prevDir = [1,0];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>for(let j=0;j&lt;steps;j++) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let dir;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(rand()&lt;cont){</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dir = prevDir;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const dirs = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dir = dirs[Math.floor(rand()*dirs.length)];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>x += dir[0]*stepSize*(0.5+rand());</p>
+<p class="p1"><span class="Apple-converted-space">      </span>y += dir[1]*stepSize*(0.5+rand());</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>x = Math.max(50, Math.min(750,x));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>y = Math.max(50, Math.min(750,y));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>ctx.lineTo(x,y);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>path += ` L ${x} ${y}`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>prevDir = dir;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>ctx.strokeStyle = ["#c86ba4","#aa92e6","#42533e"][Math.floor(rand()*3)];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>ctx.lineWidth = 4;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>ctx.lineJoin = "round";</p>
+<p class="p1"><span class="Apple-converted-space">    </span>ctx.lineCap = "round";</p>
+<p class="p1"><span class="Apple-converted-space">    </span>ctx.stroke();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>svgPaths.push(path);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>window.currentSVG = svgPaths;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function next(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>seed++;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>generate();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function toggle(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>running = !running;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">setInterval(()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(running){</p>
+<p class="p1"><span class="Apple-converted-space">    </span>next();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">},300);</p>
+<p class="p2"><br></p>
+<p class="p1">function downloadSVG(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let svg = `&lt;svg xmlns="http://www.w3.org/2000/svg" width="800" height="800"&gt;`;</p>
+<p class="p1">x</p>
+<p class="p1"><span class="Apple-converted-space">  </span>window.currentSVG.forEach(p=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>svg += `&lt;path d="${p}" fill="none" stroke="black" stroke-width="4"/&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>svg += "&lt;/svg&gt;";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>let blob = new Blob([svg], {type:"image/svg+xml"});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let url = URL.createObjectURL(blob);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>let a = document.createElement("a");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>a.href = url;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>a.download = "pattern.svg";</p>
+<p class="p1"><span class="Apple-converted-space">  </span>a.click();</p>
+<p class="p1">}</p>
+<p class="p1">generate();</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
