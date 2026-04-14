@@ -16,10 +16,11 @@
     }
 
     .controls {
-      width: 340px;
+      width: 360px;
       padding: 20px;
       background: #eeeeee;
       overflow-y: auto;
+      border-right: 1px solid #ccc;
     }
 
     .preview {
@@ -40,10 +41,16 @@
       box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
     }
 
+    h2 {
+      margin-top: 0;
+      font-size: 22px;
+    }
+
     label {
       display: block;
       margin-top: 14px;
       font-size: 14px;
+      line-height: 1.4;
     }
 
     input[type="range"] {
@@ -92,7 +99,23 @@
       margin-top: 18px;
       font-size: 12px;
       color: #666;
-      line-height: 1.6;
+      line-height: 1.7;
+      background: #f7f7f7;
+      padding: 10px 12px;
+      border-radius: 8px;
+    }
+
+    .section {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #d5d5d5;
+    }
+
+    .section-title {
+      font-size: 13px;
+      color: #444;
+      font-weight: 700;
+      margin-bottom: 4px;
     }
 
     .color-grid {
@@ -127,11 +150,34 @@
     .hidden {
       display: none;
     }
+
+    .small {
+      font-size: 11px;
+      color: #777;
+      margin-top: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #ddd;
+      font-size: 11px;
+      margin-left: 6px;
+    }
   </style>
 </head>
 <body>
   <div class="controls">
     <h2>パターン設定</h2>
+
+    <label>
+      キャンバスサイズ
+      <select id="canvasSize">
+        <option value="70">70mm × 70mm</option>
+        <option value="100" selected>100mm × 100mm</option>
+      </select>
+    </label>
 
     <label>
       乱数方式
@@ -144,17 +190,17 @@
 
     <label>
       ライン数 <span class="value" id="linesVal">20</span>
-      <input type="range" id="lines" min="1" max="40" value="20">
+      <input type="range" id="lines" min="1" max="60" value="20">
     </label>
 
     <label>
       ステップ数 <span class="value" id="stepsVal">15</span>
-      <input type="range" id="steps" min="5" max="40" value="15">
+      <input type="range" id="steps" min="5" max="50" value="15">
     </label>
 
     <label>
       ステップサイズ <span class="value" id="stepSizeVal">40</span>
-      <input type="range" id="stepSize" min="10" max="80" value="40">
+      <input type="range" id="stepSize" min="10" max="100" value="40">
     </label>
 
     <label>
@@ -163,21 +209,53 @@
     </label>
 
     <label>
-      線の太さ <span class="value" id="strokeWidthVal">4</span>
-      <input type="range" id="strokeWidth" min="1" max="12" value="4">
+      線の太さ <span class="value" id="strokeWidthVal">2</span>
+      <input type="range" id="strokeWidth" min="1" max="6" value="2">
     </label>
 
-    <label>
-      色数
-      <select id="colorCount">
-        <option value="1">1色</option>
-        <option value="2">2色</option>
-        <option value="3" selected>3色</option>
-      </select>
-    </label>
+    <div class="section">
+      <div class="section-title">刺繍向け制御</div>
 
-    <label>
-      線の色
+      <label>
+        推奨ステッチ長 <span class="value" id="stitchLenVal">2.5</span> mm
+        <input type="range" id="stitchLength" min="0.8" max="4.0" step="0.1" value="2.5">
+      </label>
+      <div class="small">これは生成密度の目安です。Ink/Stitch の実際の針設定は Inkscape 側で調整してください。</div>
+
+      <label>
+        最小間距離 <span class="value" id="minGapVal">8</span> px
+        <input type="range" id="minGap" min="0" max="40" value="8">
+      </label>
+
+      <label>
+        パス順序最適化
+        <select id="pathSort">
+          <option value="on" selected>有効</option>
+          <option value="off">無効</option>
+        </select>
+      </label>
+
+      <label>
+        自動分色
+        <select id="autoColor">
+          <option value="on" selected>有効</option>
+          <option value="off">無効</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">色設定</div>
+
+      <label>
+        色数
+        <select id="colorCount">
+          <option value="1">1色</option>
+          <option value="2">2色</option>
+          <option value="3" selected>3色</option>
+        </select>
+      </label>
+
       <div class="color-grid">
         <div class="color-item" id="colorItem1">
           <span>色1</span>
@@ -192,7 +270,7 @@
           <input type="color" id="lineColor3" value="#42533e">
         </div>
       </div>
-    </label>
+    </div>
 
     <div class="buttons">
       <button onclick="nextPattern()">再生成</button>
@@ -201,7 +279,8 @@
 
     <div class="hint">
       スライダーを動かすと、その場でパターンが更新されます。<br>
-      「再生成」を押すと、同じ設定のまま別のパターンを作ります。
+      「再生成」を押すと、同じ設定のまま別のパターンを作ります。<br>
+      色順とパス順をまとめて、Ink/Stitch での換線と跳びを少し減らすようにしています。
     </div>
   </div>
 
@@ -210,6 +289,9 @@
   </div>
 
   <script>
+    const INTERNAL_SIZE = 800;
+    const MARGIN = 50;
+
     let seed = 1;
     let currentSVG = [];
     let xorshiftState = 2463534242;
@@ -243,6 +325,8 @@
       document.getElementById("stepSizeVal").textContent = document.getElementById("stepSize").value;
       document.getElementById("contVal").textContent = document.getElementById("cont").value;
       document.getElementById("strokeWidthVal").textContent = document.getElementById("strokeWidth").value;
+      document.getElementById("stitchLenVal").textContent = document.getElementById("stitchLength").value;
+      document.getElementById("minGapVal").textContent = document.getElementById("minGap").value;
     }
 
     function updateColorUI() {
@@ -262,6 +346,142 @@
       return colors.slice(0, count);
     }
 
+    function distance(a, b) {
+      const dx = a[0] - b[0];
+      const dy = a[1] - b[1];
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function pointToSegmentDistance(p, a, b) {
+      const [px, py] = p;
+      const [ax, ay] = a;
+      const [bx, by] = b;
+      const dx = bx - ax;
+      const dy = by - ay;
+
+      if (dx === 0 && dy === 0) return distance(p, a);
+
+      const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
+      const cx = ax + t * dx;
+      const cy = ay + t * dy;
+      return Math.sqrt((px - cx) ** 2 + (py - cy) ** 2);
+    }
+
+    function pathTooClose(points, existingPaths, minGap) {
+      if (minGap <= 0) return false;
+
+      for (const p of points) {
+        for (const path of existingPaths) {
+          for (let i = 1; i < path.points.length; i++) {
+            if (pointToSegmentDistance(p, path.points[i - 1], path.points[i]) < minGap) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    function chooseColor(index, selectedColors) {
+      const autoColor = document.getElementById("autoColor").value;
+      if (autoColor === "off") return selectedColors[0];
+
+      return selectedColors[index % selectedColors.length];
+    }
+
+    function buildPathData(points) {
+      if (!points.length) return "";
+      return points.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ");
+    }
+
+    function optimizeOrder(paths) {
+      if (document.getElementById("pathSort").value === "off" || paths.length <= 1) {
+        return paths;
+      }
+
+      const result = [];
+      const used = new Array(paths.length).fill(false);
+
+      let currentIndex = 0;
+      result.push(paths[currentIndex]);
+      used[currentIndex] = true;
+
+      while (result.length < paths.length) {
+        const currentPath = result[result.length - 1];
+        const currentEnd = currentPath.points[currentPath.points.length - 1];
+
+        let bestIndex = -1;
+        let bestDistance = Infinity;
+        let reverseNeeded = false;
+
+        for (let i = 0; i < paths.length; i++) {
+          if (used[i]) continue;
+
+          const start = paths[i].points[0];
+          const end = paths[i].points[paths[i].points.length - 1];
+          const d1 = distance(currentEnd, start);
+          const d2 = distance(currentEnd, end);
+
+          if (d1 < bestDistance) {
+            bestDistance = d1;
+            bestIndex = i;
+            reverseNeeded = false;
+          }
+          if (d2 < bestDistance) {
+            bestDistance = d2;
+            bestIndex = i;
+            reverseNeeded = true;
+          }
+        }
+
+        let next = paths[bestIndex];
+        if (reverseNeeded) {
+          next = {
+            ...next,
+            points: [...next.points].reverse(),
+            path: buildPathData([...next.points].reverse())
+          };
+        }
+
+        result.push(next);
+        used[bestIndex] = true;
+      }
+
+      return result;
+    }
+
+    function generateSingleLine(steps, stepSize, cont, densityFactor) {
+      let x = getRand() * (INTERNAL_SIZE - MARGIN * 2) + MARGIN;
+      let y = getRand() * (INTERNAL_SIZE - MARGIN * 2) + MARGIN;
+
+      const points = [[x, y]];
+      let prevDir = [1, 0];
+
+      for (let j = 0; j < steps; j++) {
+        let dir;
+        if (getRand() < cont) {
+          dir = prevDir;
+        } else {
+          const dirs = [
+            [1, 0], [-1, 0], [0, 1], [0, -1],
+            [1, 1], [-1, 1], [1, -1], [-1, -1]
+          ];
+          dir = dirs[Math.floor(getRand() * dirs.length)];
+        }
+
+        x += dir[0] * stepSize * densityFactor * (0.5 + getRand());
+        y += dir[1] * stepSize * densityFactor * (0.5 + getRand());
+
+        x = Math.max(MARGIN, Math.min(INTERNAL_SIZE - MARGIN, x));
+        y = Math.max(MARGIN, Math.min(INTERNAL_SIZE - MARGIN, y));
+
+        points.push([x, y]);
+        prevDir = dir;
+      }
+
+      return points;
+    }
+
     function generate() {
       updateLabels();
       updateColorUI();
@@ -277,53 +497,64 @@
       const cont = parseInt(document.getElementById("cont").value, 10) / 100;
       const strokeWidth = parseInt(document.getElementById("strokeWidth").value, 10);
       const selectedColors = getSelectedColors();
+      const minGap = parseInt(document.getElementById("minGap").value, 10);
+      const stitchLength = parseFloat(document.getElementById("stitchLength").value);
 
-      currentSVG = [];
+      const densityFactor = Math.max(0.45, Math.min(1.5, stitchLength / 2.5));
 
-      for (let i = 0; i < lineCount; i++) {
-        let x = getRand() * 700 + 50;
-        let y = getRand() * 700 + 50;
+      let allPaths = [];
+      let attempts = 0;
+      const maxAttempts = lineCount * 20;
 
-        ctx.beginPath();
-        ctx.moveTo(x, y);
+      while (allPaths.length < lineCount && attempts < maxAttempts) {
+        attempts++;
 
-        let path = `M ${x.toFixed(1)} ${y.toFixed(1)}`;
-        let prevDir = [1, 0];
+        const pts = generateSingleLine(steps, stepSize, cont, densityFactor);
 
-        for (let j = 0; j < steps; j++) {
-          let dir;
-
-          if (getRand() < cont) {
-            dir = prevDir;
-          } else {
-            const dirs = [
-              [1, 0], [-1, 0], [0, 1], [0, -1],
-              [1, 1], [-1, 1], [1, -1], [-1, -1]
-            ];
-            dir = dirs[Math.floor(getRand() * dirs.length)];
-          }
-
-          x += dir[0] * stepSize * (0.5 + getRand());
-          y += dir[1] * stepSize * (0.5 + getRand());
-
-          x = Math.max(50, Math.min(750, x));
-          y = Math.max(50, Math.min(750, y));
-
-          ctx.lineTo(x, y);
-          path += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
-          prevDir = dir;
+        if (pathTooClose(pts, allPaths, minGap)) {
+          continue;
         }
 
-        const lineColor = selectedColors[Math.floor(getRand() * selectedColors.length)];
+        const color = chooseColor(allPaths.length, selectedColors);
 
-        ctx.strokeStyle = lineColor;
-        ctx.lineWidth = strokeWidth;
+        allPaths.push({
+          points: pts,
+          color: color,
+          path: buildPathData(pts),
+          strokeWidth: strokeWidth
+        });
+      }
+
+      const grouped = {};
+      for (const p of allPaths) {
+        if (!grouped[p.color]) grouped[p.color] = [];
+        grouped[p.color].push(p);
+      }
+
+      let finalPaths = [];
+      Object.keys(grouped).forEach(color => {
+        const ordered = optimizeOrder(grouped[color]);
+        finalPaths = finalPaths.concat(ordered);
+      });
+
+      currentSVG = finalPaths;
+
+      ctx.fillStyle = "#f5f2eb";
+      ctx.fillRect(0, 0, INTERNAL_SIZE, INTERNAL_SIZE);
+
+      currentSVG.forEach(item => {
+        ctx.beginPath();
+        const pts = item.points;
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let i = 1; i < pts.length; i++) {
+          ctx.lineTo(pts[i][0], pts[i][1]);
+        }
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth = item.strokeWidth;
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
         ctx.stroke();
-
-        currentSVG.push({ path, color: lineColor, strokeWidth });
-      }
+      });
     }
 
     function nextPattern() {
@@ -333,8 +564,13 @@
     }
 
     function downloadSVG() {
-      let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">`;
-      svg += `<rect width="800" height="800" fill="#f5f2eb"/>`;
+      const sizeMm = parseInt(document.getElementById("canvasSize").value, 10);
+      const stitchLength = parseFloat(document.getElementById("stitchLength").value);
+
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>`;
+      svg += `<svg xmlns="http://www.w3.org/2000/svg" width="${sizeMm}mm" height="${sizeMm}mm" viewBox="0 0 ${INTERNAL_SIZE} ${INTERNAL_SIZE}">`;
+      svg += `<desc>Recommended running stitch length: ${stitchLength}mm. Set actual stitch parameters in Ink/Stitch.</desc>`;
+      svg += `<rect width="${INTERNAL_SIZE}" height="${INTERNAL_SIZE}" fill="#f5f2eb"/>`;
 
       currentSVG.forEach(item => {
         svg += `<path d="${item.path}" fill="none" stroke="${item.color}" stroke-width="${item.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`;
@@ -347,7 +583,7 @@
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = "pattern.svg";
+      a.download = `pattern_${sizeMm}mm.svg`;
       a.click();
 
       URL.revokeObjectURL(url);
