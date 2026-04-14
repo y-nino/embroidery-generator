@@ -12,15 +12,15 @@
       font-family: sans-serif;
       display: flex;
       min-height: 100vh;
-      background: #ddd;
+      background: #ffffff;
     }
 
     .controls {
       width: 360px;
       padding: 20px;
-      background: #eeeeee;
+      background: #fafafa;
       overflow-y: auto;
-      border-right: 1px solid #ccc;
+      border-right: 1px solid #ddd;
     }
 
     .preview {
@@ -29,7 +29,7 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
-      background: #666;
+      background: #ffffff;
     }
 
     canvas {
@@ -108,7 +108,7 @@
     .section {
       margin-top: 18px;
       padding-top: 14px;
-      border-top: 1px solid #d5d5d5;
+      border-top: 1px solid #e2e2e2;
     }
 
     .section-title {
@@ -156,15 +156,6 @@
       color: #777;
       margin-top: 4px;
     }
-
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: #ddd;
-      font-size: 11px;
-      margin-left: 6px;
-    }
   </style>
 </head>
 <body>
@@ -211,6 +202,11 @@
     <label>
       線の太さ <span class="value" id="strokeWidthVal">12</span>
       <input type="range" id="strokeWidth" min="4" max="30" value="12">
+    </label>
+
+    <label>
+      角の丸み <span class="value" id="cornerRoundVal">2</span>
+      <input type="range" id="cornerRound" min="0" max="4" step="1" value="2">
     </label>
 
     <div class="section">
@@ -280,7 +276,8 @@
     <div class="hint">
       スライダーを動かすと、その場でパターンが更新されます。<br>
       「再生成」を押すと、同じ設定のまま別のパターンを作ります。<br>
-      現在の版では、背景は透明、書き出しは closed outline + fill です。
+      背景は透明、書き出しは closed outline + fill です。<br>
+      角が尖る場合は「角の丸み」を上げてください。
     </div>
   </div>
 
@@ -325,6 +322,7 @@
       document.getElementById("stepSizeVal").textContent = document.getElementById("stepSize").value;
       document.getElementById("contVal").textContent = document.getElementById("cont").value;
       document.getElementById("strokeWidthVal").textContent = document.getElementById("strokeWidth").value;
+      document.getElementById("cornerRoundVal").textContent = document.getElementById("cornerRound").value;
       document.getElementById("stitchLenVal").textContent = document.getElementById("stitchLength").value;
       document.getElementById("minGapVal").textContent = document.getElementById("minGap").value;
     }
@@ -517,6 +515,38 @@
       return left.concat(right.reverse());
     }
 
+    function smoothClosedPolygon(points, iterations) {
+      if (!points || points.length < 3 || iterations <= 0) return points;
+
+      let result = points.slice();
+
+      for (let k = 0; k < iterations; k++) {
+        const newPoints = [];
+        const n = result.length;
+
+        for (let i = 0; i < n; i++) {
+          const p0 = result[i];
+          const p1 = result[(i + 1) % n];
+
+          const q = [
+            0.75 * p0[0] + 0.25 * p1[0],
+            0.75 * p0[1] + 0.25 * p1[1]
+          ];
+
+          const r = [
+            0.25 * p0[0] + 0.75 * p1[0],
+            0.25 * p0[1] + 0.75 * p1[1]
+          ];
+
+          newPoints.push(q, r);
+        }
+
+        result = newPoints;
+      }
+
+      return result;
+    }
+
     function generate() {
       updateLabels();
       updateColorUI();
@@ -531,6 +561,7 @@
       const stepSize = parseInt(document.getElementById("stepSize").value, 10);
       const cont = parseInt(document.getElementById("cont").value, 10) / 100;
       const strokeWidth = parseInt(document.getElementById("strokeWidth").value, 10);
+      const cornerRound = parseInt(document.getElementById("cornerRound").value, 10);
       const selectedColors = getSelectedColors();
       const minGap = parseInt(document.getElementById("minGap").value, 10);
       const stitchLength = parseFloat(document.getElementById("stitchLength").value);
@@ -551,9 +582,11 @@
         }
 
         const color = chooseColor(allPaths.length, selectedColors);
-        const outline = computeOutline(pts, strokeWidth);
+        let outline = computeOutline(pts, strokeWidth);
 
         if (!outline || outline.length < 3) continue;
+
+        outline = smoothClosedPolygon(outline, cornerRound);
 
         allPaths.push({
           points: pts,
